@@ -11,7 +11,7 @@ def create_blue_customer() -> Customer:
     # reverse analysis of the Blue customer bill sheet
     # TODO: automate as bill-parsers and flatten equally for whole period
 
-    customer = CustomerFactory(name="Blue customer")
+    customer = CustomerFactory(business_name="Blue customer")
 
     PEAK_ENERGY_BUT_OFF_PEAK_NETWORK = 6_927.9400 - 6_372.3280  # = 555.6120
     OFF_PEAK_BOOTH = min(3_229.5760, 3_785.1880)  # = 3_229.5760
@@ -40,36 +40,36 @@ def create_blue_customer() -> Customer:
     # OFF_PEAK_BOOTH
     EnergyQuantileFactory(
         customer=customer,
-        start=datetime(2023, 1, 4, 1, 33, 00, tzinfo=ZoneInfo("Australia/Sydney")),
-        end=datetime(2023, 1, 4, 8, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
-        type=EnergyType.KWH,
+        start=datetime(2024, 1, 4, 1, 33, 00, tzinfo=ZoneInfo("Australia/Sydney")),
+        end=datetime(2024, 1, 4, 8, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
+        type=EnergyType.KWH.value,
         value=OFF_PEAK_BOOTH,
     )
 
     # PEAK_ENERGY_BUT_OFF_PEAK_NETWORK
     EnergyQuantileFactory(
         customer=customer,
-        start=datetime(2023, 1, 4, 10, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
-        end=datetime(2023, 1, 4, 13, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
-        type=EnergyType.KWH,
+        start=datetime(2024, 1, 4, 10, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
+        end=datetime(2024, 1, 4, 13, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
+        type=EnergyType.KWH.value,
         value=PEAK_ENERGY_BUT_OFF_PEAK_NETWORK,
     )
 
     # PEAK_BOOTH
     EnergyQuantileFactory(
         customer=customer,
-        start=datetime(2023, 1, 4, 16, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
-        end=datetime(2023, 1, 4, 17, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
-        type=EnergyType.KWH,
+        start=datetime(2024, 1, 4, 16, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
+        end=datetime(2024, 1, 4, 17, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
+        type=EnergyType.KWH.value,
         value=PEAK_BOOTH,
     )
 
     # Summer DEMAND for month
     EnergyQuantileFactory(
         customer=customer,
-        start=datetime(2023, 1, 1, 0, 0, 0, tzinfo=ZoneInfo("Australia/Sydney")),
-        end=datetime(2023, 1, 31, 23, 59, 59, tzinfo=ZoneInfo("Australia/Sydney")),
-        type=EnergyType.KW,
+        start=datetime(2024, 1, 1, 0, 0, 0, tzinfo=ZoneInfo("Australia/Sydney")),
+        end=datetime(2024, 1, 31, 23, 59, 59, tzinfo=ZoneInfo("Australia/Sydney")),
+        type=EnergyType.KW.value,
         value=34.1600,
     )
 

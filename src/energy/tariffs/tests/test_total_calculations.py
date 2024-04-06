@@ -13,7 +13,9 @@ class TestTotalCalculations(BaseEnergyTest):
 
         calculator = CalculatorService(
             supplier=blue_supplier,
-            customer=blue_customer
+            customer=blue_customer,
+            from_date=FROM_DATE,
+            to_date=TO_DATE,
         )
 
-        assert calculator.calculate_total(from_date=FROM_DATE, to_date=TO_DATE) == EXPECTED_TOTAL_BLUE
+        assert calculator.calculate_total() == EXPECTED_TOTAL_BLUE

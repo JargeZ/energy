@@ -10,7 +10,7 @@ class EnergyQuantile(models.Model):
     end = models.DateTimeField()
 
     type = models.CharField(max_length=255, choices=EnergyType.choices)
-    value = models.DecimalField(max_digits=10, decimal_places=10)
+    value = models.DecimalField(max_digits=15, decimal_places=10)
 
     class Meta:
         db_table = 'energy_quantile'

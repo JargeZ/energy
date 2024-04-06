@@ -5,10 +5,10 @@ from factory.django import DjangoModelFactory
 
 
 class CustomerFactory(DjangoModelFactory):
-    business_name = factory.LazyAttribute(lambda obj: faker.company())
-    email = factory.LazyAttribute(lambda obj: faker.email())
-    phone = factory.LazyAttribute(lambda obj: faker.phone_number())
-    address = factory.LazyAttribute(lambda obj: faker.address())
+    business_name = factory.LazyAttribute(lambda obj: factory.Faker('company'))
+    email = factory.LazyAttribute(lambda obj: factory.Faker('email'))
+    phone = factory.LazyAttribute(lambda obj: factory.Faker('phone_number'))
+    address = factory.LazyAttribute(lambda obj: factory.Faker('address'))
 
     class Meta:
         model = Customer

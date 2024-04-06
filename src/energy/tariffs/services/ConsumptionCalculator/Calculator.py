@@ -55,15 +55,15 @@ class CalculatorService:
 
     def calculate_total(self) -> Decimal:
         TARIFF_FIRST_HANDLERS = {
-            UnitType.DAYS: self._eval_tariff_type_days,
-            UnitType.FIXED: self._eval_tariff_type_fixed,
+            UnitType.DAYS.value: self._eval_tariff_type_days,
+            UnitType.FIXED.value: self._eval_tariff_type_fixed,
         }
 
         tariff_first_tariffs: QuerySet[Tariff] = self._get_tariffs().filter(
-            type__in=TARIFF_FIRST_HANDLERS.keys()
+            unit_type__in=TARIFF_FIRST_HANDLERS.keys()
         )
         for tariff in tariff_first_tariffs:
-            tariff_type = UnitType(tariff.unit_type)
+            tariff_type = UnitType(tariff.unit_type).value
             TARIFF_FIRST_HANDLERS[tariff_type](tariff)
 
         for consumption_quantile in self._get_quantiles(self.from_date, self.to_date):
@@ -80,7 +80,7 @@ class CalculatorService:
 
     def _get_matching_tariffs(self, quantile: s.Quantile) -> list[Tariff]:
         matching_tariffs = []
-        all_tariffs = self._get_tariffs().prefetch_related('condition').filter(type=quantile.type)
+        all_tariffs = self._get_tariffs().prefetch_related('condition').filter(unit_type=quantile.type)
 
         for t in all_tariffs:
             assert t.condition
