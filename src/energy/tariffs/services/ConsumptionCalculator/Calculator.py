@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
@@ -10,6 +11,7 @@ from energy.suppliers.models import EnergySupplier
 from energy.tariffs.models import UnitType, Tariff
 from energy.tariffs.services.ConsumptionCalculator import schema as s
 
+logger = logging.getLogger(__name__)
 
 class CalculatorService:
     def __init__(
@@ -25,6 +27,7 @@ class CalculatorService:
         self.to_date = to_date
 
         self.total: dict[UnitType, Decimal] = defaultdict(Decimal)
+        self.total_by_tariff: dict[Tariff, Decimal] = defaultdict(Decimal)
 
     def _get_quantiles(self, from_date: datetime, to_date: datetime) -> QuerySet[EnergyQuantile]:
         # It covers overlapping periods
@@ -39,19 +42,24 @@ class CalculatorService:
         return self.supplier.tariffs.order_by('-priority')
 
     def _add_quantile(self, quantile: s.Quantile):
-        cost = Decimal(0)
+        quantile_cost = Decimal(0)
         verify_consumption = Decimal(0)
 
         by_quantile = self._by_tariff_quantile_consumption(quantile)
         for tariff, consumption in by_quantile.items():
-            cost += tariff.unit_price * consumption
+            cost_part = tariff.unit_price * (consumption * tariff.consumption_coefficient)
+            self.total_by_tariff[tariff] += cost_part
+
+            logger.info(f"for Q {quantile.start} - {quantile.end} - {quantile.value} using [{tariff.name}] ({tariff.unit_type}x{tariff.unit_price}) X {consumption} = cost: {cost_part}")
+
+            quantile_cost += cost_part
             verify_consumption += consumption
 
-        if quantile.value != verify_consumption:
-            raise ValueError('Consumption mismatch')
+        if verify_consumption % quantile.value:
+            raise ValueError('Consumption mismatch not all consumption was calculated')
 
         # TODO: add by tariff total
-        self.total[UnitType(quantile.type)] += cost
+        self.total[UnitType(quantile.type).value] += quantile_cost
 
     def calculate_total(self) -> Decimal:
         TARIFF_FIRST_HANDLERS = {
@@ -73,14 +81,17 @@ class CalculatorService:
         return cast(Decimal, sum(self.total.values()))
 
     def _eval_tariff_type_days(self, tariff: Tariff):
-        pass
+        days = (self.to_date - self.from_date).days
+        cost = tariff.unit_price * days
+        self.total[UnitType.DAYS.value] += cost
+        self.total_by_tariff[tariff] += cost
 
     def _eval_tariff_type_fixed(self, tariff: Tariff):
         pass
 
     def _get_matching_tariffs(self, quantile: s.Quantile) -> list[Tariff]:
         matching_tariffs = []
-        all_tariffs = self._get_tariffs().prefetch_related('condition').filter(unit_type=quantile.type)
+        all_tariffs = self._get_tariffs().prefetch_related('condition').filter(unit_type=quantile.type.value)
 
         for t in all_tariffs:
             assert t.condition
