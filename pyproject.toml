@@ -10,8 +10,91 @@ packages = [{ include = "energy", from = "src" }]
 [tool.poetry.dependencies]
 python = "^3.12"
 django = "^5.0.4"
+pydantic = "^2.6.4"
+factory-boy = "^3.3.0"
+django-jazzmin = "^2.6.1"
+djangorestframework = "^3.15.1"
+
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^6.0.0"
+black = "^22.12.0"
+isort = "^5.11.00"
+coverage = "^7.1.0"
+pytest = "^7.2.1"
+pytest-django = "^4.7.0"
+pytest-freezer = "^0.4.8"
+pytest-xdist = "^3.5.0"
+django-stubs = {extras = ["compatible-mypy"], version = "^4.2.7"}
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "energy.core.test_settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+addopts = [
+    "--create-db",
+    "--reuse-db",
+    "-ra",
+    "-q",
+#    "--asyncio-mode=auto",
+]
+
+
+
+[tool.poetry-exec-plugin.commands]
+test = "poetry run coverage run -m pytest --junitxml junit-report.xml && poetry run coverage report"
+lint = """
+    poetry run black --check . \
+    && poetry run flake8 src/ \
+    && poetry run mypy .
+"""
+
+# for local development
+check = "isort . && black . && flake8 . ; mypy . && poetry run pytest"
+
+
+[tool.mypy]
+mypy_path = "./"
+ignore_missing_imports = true
+warn_return_any = false
+warn_unused_configs = true
+exclude = ["*migrations/*", ]
+plugins = ["pydantic.mypy", "mypy_django_plugin.main", "mypy_drf_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "gnezdo_backend.settings"
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.isort]
+profile = "black"
+
+[tool.black]
+line-length = 120
+target-version = ['py310']
+exclude = """
+(
+  /(
+      .eggs
+    | .git
+    | .hg
+    | .mypy_cache
+    | .nox
+    | .tox
+    | .venv
+    | _build
+    | buck-out
+    | build
+    | dist
+    | migrations
+  )/
+)
+"""
