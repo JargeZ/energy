@@ -19,8 +19,8 @@ class Quantile(BaseModel):
     @classmethod
     def from_consumption(cls, consumption: EnergyQuantile, from_date: datetime, to_date: datetime):
         value = consumption.value
-        start = consumption.start
-        end = consumption.end
+        start = consumption.start.astimezone(from_date.tzinfo)
+        end = consumption.end.astimezone(from_date.tzinfo)
 
         if consumption.start < from_date:
             diff = consumption.start - from_date

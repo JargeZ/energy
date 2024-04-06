@@ -100,8 +100,10 @@ class TariffCondition(models.Model):
             to_match = self.time_from <= to_date.time() <= self.time_to
             matches.append(from_match or to_match)
 
-        if self.type == TariffCondition.Type.MIXED:
-            return not all(matches) if self.inverted else all(matches)
+        if self.type != TariffCondition.Type.MIXED:
+            assert len(matches) == 1
+
+        return not all(matches) if self.inverted else all(matches)
 
 
 # Namespace for tariffs in which they should be uniq.

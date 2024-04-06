@@ -1,4 +1,4 @@
-from energy.tariffs.models import TariffCondition, Tariff
+from energy.tariffs.models import TariffCondition, Tariff, TariffGroup
 from factory.django import DjangoModelFactory
 
 

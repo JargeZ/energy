@@ -1,3 +1,7 @@
+from datetime import time, date
+from decimal import Decimal
+from zoneinfo import ZoneInfo
+
 from energy.suppliers.models import EnergySupplier
 from energy.suppliers.models_factory import EnergySupplierFactory
 from energy.tariffs.models import UnitType, TariffCondition
@@ -62,8 +66,8 @@ def create_blue_supplier() -> EnergySupplier:
         condition=TariffConditionFactory(
             name="Off-peak network time",
             type=TariffCondition.Type.TIME_RANGE.value,
-            time_from="15:00:00",
-            time_to="22:00:00",
+            time_from=time(15, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
+            time_to=time(22, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
             inverted=True,
         ),
     )
@@ -75,8 +79,8 @@ def create_blue_supplier() -> EnergySupplier:
         condition=TariffConditionFactory(
             name="Peak network time",
             type=TariffCondition.Type.TIME_RANGE.value,
-            time_from="15:00:00",
-            time_to="22:00:00",
+            time_from=time(15, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
+            time_to=time(22, 00, 00, tzinfo=ZoneInfo("Australia/Sydney")),
         ),
     )
 
@@ -98,8 +102,8 @@ def create_blue_supplier() -> EnergySupplier:
         condition=TariffConditionFactory(
             name="Summer demand time",
             type=TariffCondition.Type.DATE_RANGE.value,
-            date_from="2023-11-30",
-            date_to="2024-03-01",
+            date_from=date(2023, 11, 30),
+            date_to=date(2024, 3, 1),
         )
     )
 
