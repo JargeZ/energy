@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "energy"
+version = "0.1.0"
+description = "Test mvp"
+authors = ["JargeZ <levpony@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "energy", from = "src" }]
+
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.0.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
