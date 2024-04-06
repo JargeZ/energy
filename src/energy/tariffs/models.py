@@ -8,10 +8,18 @@ WEEKDAY_RANGE_VALIDATORS = [
 ]
 
 
+class EnergyType(models.Choices):
+    KW = "KW"
+    KWH = "kWh"
+    KWA = "kWA"
+
+
+# TODO: deduplicate but may be enough, should be not so often changing
 class UnitType(models.Choices):
     KW = "KW"
     KWH = "kWh"
     KWA = "kWA"
+
     DAYS = "days"
     FIXED = "fixed"
 

@@ -57,8 +57,8 @@ def create_blue_supplier() -> EnergySupplier:
         condition=TariffConditionFactory(
             name="Off-peak network time",
             type=TariffCondition.Type.TIME_RANGE,
-            time_from="09:00:00",
-            time_to="18:00:00",
+            time_from="15:00:00",
+            time_to="22:00:00",
         ),
     )
 
