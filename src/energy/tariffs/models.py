@@ -1,6 +1,10 @@
+from datetime import datetime
+from enum import Enum
+
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
+from energy.utils.enum_to_choises import EnumChoiceMixin
 
 WEEKDAY_RANGE_VALIDATORS = [
     MinValueValidator(1),
@@ -8,14 +12,14 @@ WEEKDAY_RANGE_VALIDATORS = [
 ]
 
 
-class EnergyType(models.Choices):
+class EnergyType(EnumChoiceMixin, Enum):
     KW = "KW"
     KWH = "kWh"
     KWA = "kWA"
 
 
 # TODO: deduplicate but may be enough, should be not so often changing
-class UnitType(models.Choices):
+class UnitType(EnumChoiceMixin, Enum):
     KW = "KW"
     KWH = "kWh"
     KWA = "kWA"
@@ -25,7 +29,7 @@ class UnitType(models.Choices):
 
 
 class TariffCondition(models.Model):
-    class Type(models.Choices):
+    class Type(EnumChoiceMixin, Enum):
         TIME_RANGE = "time_range"
         DATE_RANGE = "date_range"
         WEEKDAY_RANGE = "weekday_range"
@@ -82,9 +86,27 @@ class TariffCondition(models.Model):
             ),
         ]
 
+    def is_match(self, from_date: datetime, to_date: datetime) -> bool:
+        matches: list[bool] = []
+        if self.weekday_from and self.weekday_to:
+            matches.append(self.weekday_from <= from_date.isoweekday() <= self.weekday_to)
+
+        if self.date_from and self.date_to:
+            from_match = self.date_from <= from_date.date() <= self.date_to
+            to_match = self.date_from <= to_date.date() <= self.date_to
+            matches.append(from_match or to_match)
+
+        if self.time_from and self.time_to:
+            from_match = self.time_from <= from_date.time() <= self.time_to
+            to_match = self.time_from <= to_date.time() <= self.time_to
+            matches.append(from_match or to_match)
+
+        if self.type == TariffCondition.Type.MIXED:
+            return not all(matches) if self.inverted else all(matches)
+
 
 class Tariff(models.Model):
-    supplier = models.ForeignKey('suppliers.EnergySupplier', on_delete=models.CASCADE)
+    supplier = models.ForeignKey('suppliers.EnergySupplier', on_delete=models.CASCADE, related_name='tariffs')
     name = models.CharField(max_length=255)
 
     unit_price = models.DecimalField(max_digits=10, decimal_places=10)
@@ -94,7 +116,7 @@ class Tariff(models.Model):
     # stackable = models.BooleanField(default=False)
 
     # NOTE: Possible many (but need to clarify AND/OR logic)
-    condition = models.ForeignKey(TariffCondition, on_delete=models.CASCADE, null=True, blank=True)
+    condition: TariffCondition | None = models.ForeignKey(TariffCondition, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         db_table = 'tariff'

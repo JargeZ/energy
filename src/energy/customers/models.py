@@ -1,4 +1,5 @@
 from django.db import models
+from energy.consumption.models import EnergyQuantile
 
 
 class Customer(models.Model):
@@ -6,6 +7,8 @@ class Customer(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=20)
     address = models.TextField()
+
+    energy_quantiles: models.QuerySet[EnergyQuantile]
 
     class Meta:
         db_table = 'customer'

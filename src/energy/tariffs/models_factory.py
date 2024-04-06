@@ -2,11 +2,11 @@ from energy.tariffs.models import TariffCondition, Tariff
 from factory.django import DjangoModelFactory
 
 
-class TariffConditionFactory(DjangoModelFactory[TariffCondition]):
+class TariffConditionFactory(DjangoModelFactory):
     class Meta:
         model = TariffCondition
 
 
-class TariffFactory(DjangoModelFactory[Tariff]):
+class TariffFactory(DjangoModelFactory):
     class Meta:
         model = Tariff

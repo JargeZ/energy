@@ -4,7 +4,7 @@ from energy.tariffs.models import EnergyType
 
 
 class EnergyQuantile(models.Model):
-    customer = models.ForeignKey('customers.Customer', on_delete=models.CASCADE)
+    customer = models.ForeignKey('customers.Customer', on_delete=models.CASCADE, related_name='energy_quantiles')
 
     start = models.DateTimeField()
     end = models.DateTimeField()
