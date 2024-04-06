@@ -5,21 +5,24 @@ from decimal import Decimal
 from typing import cast
 
 from django.db.models import QuerySet
+
 from energy.consumption.models import EnergyQuantile
 from energy.customers.models import Customer
 from energy.suppliers.models import EnergySupplier
-from energy.tariffs.models import UnitType, Tariff
+from energy.tariffs.models import Tariff, UnitType
 from energy.tariffs.services.ConsumptionCalculator import schema as s
 
 logger = logging.getLogger(__name__)
 
+
 class CalculatorService:
     def __init__(
-            self, *,
-            supplier: EnergySupplier,
-            customer: Customer,
-            from_date: datetime,
-            to_date: datetime,
+        self,
+        *,
+        supplier: EnergySupplier,
+        customer: Customer,
+        from_date: datetime,
+        to_date: datetime,
     ):
         self.supplier = supplier
         self.customer = customer
@@ -39,7 +42,7 @@ class CalculatorService:
         )
 
     def _get_tariffs(self) -> QuerySet[Tariff]:
-        return self.supplier.tariffs.order_by('-priority')
+        return self.supplier.tariffs.order_by("-priority")
 
     def _add_quantile(self, quantile: s.Quantile):
         quantile_cost = Decimal(0)
@@ -50,13 +53,17 @@ class CalculatorService:
             cost_part = tariff.unit_price * (consumption * tariff.consumption_coefficient)
             self.total_by_tariff[tariff] += cost_part
 
-            logger.info(f"for Q {quantile.start} - {quantile.end} - {quantile.value} using [{tariff.name}] ({tariff.unit_type}x{tariff.unit_price}) X {consumption} = cost: {cost_part}")
+            logger.info(
+                f"for Q {quantile.start} - {quantile.end} - {quantile.value} using "
+                f"[{tariff.name}] ({tariff.unit_type}x{tariff.unit_price}) "
+                f"X {consumption} = cost: {cost_part}"
+            )
 
             quantile_cost += cost_part
             verify_consumption += consumption
 
         if verify_consumption % quantile.value:
-            raise ValueError('Consumption mismatch not all consumption was calculated')
+            raise ValueError("Consumption mismatch not all consumption was calculated")
 
         # TODO: add by tariff total
         self.total[UnitType(quantile.type).value] += quantile_cost
@@ -67,9 +74,7 @@ class CalculatorService:
             UnitType.FIXED.value: self._eval_tariff_type_fixed,
         }
 
-        tariff_first_tariffs: QuerySet[Tariff] = self._get_tariffs().filter(
-            unit_type__in=TARIFF_FIRST_HANDLERS.keys()
-        )
+        tariff_first_tariffs: QuerySet[Tariff] = self._get_tariffs().filter(unit_type__in=TARIFF_FIRST_HANDLERS.keys())
         for tariff in tariff_first_tariffs:
             tariff_type = UnitType(tariff.unit_type).value
             TARIFF_FIRST_HANDLERS[tariff_type](tariff)
@@ -91,7 +96,7 @@ class CalculatorService:
 
     def _get_matching_tariffs(self, quantile: s.Quantile) -> list[Tariff]:
         matching_tariffs = []
-        all_tariffs = self._get_tariffs().prefetch_related('condition').filter(unit_type=quantile.type.value)
+        all_tariffs = self._get_tariffs().prefetch_related("condition").filter(unit_type=quantile.type.value)
 
         for t in all_tariffs:
             assert t.condition
@@ -109,9 +114,9 @@ class CalculatorService:
         groups = [t.group_id for t in matching_tariffs]
         if len(groups) != len(set(groups)):
             # TODO: implement multiple matching tariffs
-            raise NotImplementedError('Multiple tariffs from the same group found')
+            raise NotImplementedError("Multiple tariffs from the same group found")
 
         if len(matching_tariffs) == 0:
-            raise ValueError('No matching tariffs found')
+            raise ValueError("No matching tariffs found")
 
         return {t: quantile.value for t in matching_tariffs}

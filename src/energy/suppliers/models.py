@@ -1,4 +1,5 @@
 from django.db import models
+
 from energy.tariffs.models import Tariff
 
 
@@ -8,7 +9,7 @@ class EnergySupplier(models.Model):
     tariffs: models.QuerySet[Tariff]
 
     class Meta:
-        db_table = 'energy_supplier'
+        db_table = "energy_supplier"
 
     def __str__(self):
         return self.name

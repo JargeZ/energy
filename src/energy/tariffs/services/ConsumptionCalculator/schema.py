@@ -1,9 +1,10 @@
 from datetime import datetime
 from decimal import Decimal
 
+from pydantic import BaseModel, ConfigDict
+
 from energy.consumption.models import EnergyQuantile
 from energy.tariffs.models import EnergyType
-from pydantic import BaseModel
 
 
 class Quantile(BaseModel):
@@ -13,8 +14,9 @@ class Quantile(BaseModel):
     start: datetime
     end: datetime
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+    )
 
     @classmethod
     def from_consumption(cls, consumption: EnergyQuantile, from_date: datetime, to_date: datetime):

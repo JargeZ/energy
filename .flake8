@@ -1,0 +1,5 @@
+[flake8]
+ignore = F401, W503
+exclude = __pycache__,*/migrations,.venv,venv,.git
+max-complexity = 10
+max-line-length=120

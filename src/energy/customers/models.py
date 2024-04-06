@@ -1,4 +1,5 @@
 from django.db import models
+
 from energy.consumption.models import EnergyQuantile
 
 
@@ -11,7 +12,7 @@ class Customer(models.Model):
     energy_quantiles: models.QuerySet[EnergyQuantile]
 
     class Meta:
-        db_table = 'customer'
+        db_table = "customer"
 
     def __str__(self):
         return f"{self.business_name} {self.address}"

@@ -1,15 +1,13 @@
 from datetime import datetime
 from enum import Enum
 
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import CheckConstraint, Q
+
 from energy.utils.enum_to_choises import EnumChoiceMixin
 
-WEEKDAY_RANGE_VALIDATORS = [
-    MinValueValidator(1),
-    MaxValueValidator(7)
-]
+WEEKDAY_RANGE_VALIDATORS = [MinValueValidator(1), MaxValueValidator(7)]
 
 
 class EnergyType(EnumChoiceMixin, Enum):
@@ -49,35 +47,24 @@ class TariffCondition(models.Model):
     date_from = models.DateField(null=True, blank=True)
     date_to = models.DateField(null=True, blank=True)
 
-    weekday_from = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=WEEKDAY_RANGE_VALIDATORS
-    )
-    weekday_to = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=WEEKDAY_RANGE_VALIDATORS
-    )
+    weekday_from = models.IntegerField(null=True, blank=True, validators=WEEKDAY_RANGE_VALIDATORS)
+    weekday_to = models.IntegerField(null=True, blank=True, validators=WEEKDAY_RANGE_VALIDATORS)
 
     class Meta:
-        db_table = 'tariff_condition'
+        db_table = "tariff_condition"
         constraints = [
             CheckConstraint(
                 check=(
-                        Q(type='time_range') & Q(time_from__isnull=False, time_to__isnull=False)
-                        | Q(type='date_range') & Q(date_from__isnull=False, date_to__isnull=False)
-                        | Q(type='mixed') & Q(
-                            date_from__isnull=False, date_to__isnull=False, time_from__isnull=False,
-                            time_to__isnull=False
-                        )
-                        | Q(type='weekday_range') & Q(weekday_from__isnull=False, weekday_to__isnull=False)
+                    Q(type="time_range") & Q(time_from__isnull=False, time_to__isnull=False)
+                    | Q(type="date_range") & Q(date_from__isnull=False, date_to__isnull=False)
+                    | Q(type="mixed")
+                    & Q(date_from__isnull=False, date_to__isnull=False, time_from__isnull=False, time_to__isnull=False)
+                    | Q(type="weekday_range") & Q(weekday_from__isnull=False, weekday_to__isnull=False)
                 ),
-                name='ranges_fields',
+                name="ranges_fields",
             ),
-
             CheckConstraint(
-                name='weekday_from_1_to_7_or_null',
+                name="weekday_from_1_to_7_or_null",
                 check=(
                     Q(weekday_from__gte=1, weekday_from__lte=7, weekday_to__gte=1, weekday_to__lte=7)
                     | Q(weekday_from__isnull=True, weekday_to__isnull=True)
@@ -114,11 +101,11 @@ class TariffGroup(models.Model):
     name = models.CharField(max_length=255)
 
     class Meta:
-        db_table = 'tariff_group'
+        db_table = "tariff_group"
 
 
 class Tariff(models.Model):
-    supplier = models.ForeignKey('suppliers.EnergySupplier', on_delete=models.CASCADE, related_name='tariffs')
+    supplier = models.ForeignKey("suppliers.EnergySupplier", on_delete=models.CASCADE, related_name="tariffs")
     name = models.CharField(max_length=255)
 
     unit_price = models.DecimalField(max_digits=15, decimal_places=10)
@@ -127,29 +114,29 @@ class Tariff(models.Model):
     priority = models.IntegerField(default=0)
     group = models.ForeignKey(TariffGroup, on_delete=models.CASCADE, null=False, blank=False)
     group_id: int
-    
+
     consumption_coefficient = models.DecimalField(max_digits=10, decimal_places=5, default=1)
 
     # NOTE: Possible many (but need to clarify AND/OR logic)
-    condition: TariffCondition | None = models.ForeignKey(TariffCondition, on_delete=models.CASCADE, null=True,
-                                                          blank=True)
+    condition: TariffCondition | None = models.ForeignKey(
+        TariffCondition, on_delete=models.CASCADE, null=True, blank=True
+    )
 
     class Meta:
-        db_table = 'tariff'
+        db_table = "tariff"
         constraints = [
             CheckConstraint(
-                name='effective_after_consumption_positive',
+                name="effective_after_consumption_positive",
                 check=Q(effective_after_consumption__gte=0),
             ),
             CheckConstraint(
-                name='condition_set_for_kwh',
+                name="condition_set_for_kwh",
                 check=(
-                        Q(unit_type='kWh') & Q(condition__isnull=False)
-                        | Q(unit_type='KW') & Q(condition__isnull=False)
-                        | Q(unit_type='kWA') & Q(condition__isnull=False)
-
-                        | Q(unit_type='days') & Q(condition__isnull=True)
-                        | Q(unit_type='fixed') & Q(condition__isnull=True)
+                    Q(unit_type="kWh") & Q(condition__isnull=False)
+                    | Q(unit_type="KW") & Q(condition__isnull=False)
+                    | Q(unit_type="kWA") & Q(condition__isnull=False)
+                    | Q(unit_type="days") & Q(condition__isnull=True)
+                    | Q(unit_type="fixed") & Q(condition__isnull=True)
                 ),
             ),
         ]

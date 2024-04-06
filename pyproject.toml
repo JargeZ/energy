@@ -27,6 +27,7 @@ pytest-freezer = "^0.4.8"
 pytest-xdist = "^3.5.0"
 django-stubs = {extras = ["compatible-mypy"], version = "^4.2.7"}
 types-factory-boy = "^0.4.1"
+djangorestframework-stubs = {extras = ["compatible-mypy"], version = "^3.14.5"}
 
 
 [build-system]
@@ -64,11 +65,11 @@ mypy_path = "./"
 ignore_missing_imports = true
 warn_return_any = false
 warn_unused_configs = true
-exclude = ["*migrations/*", ]
+exclude = ["migrations/*", ]
 plugins = ["pydantic.mypy", "mypy_django_plugin.main", "mypy_drf_plugin.main"]
 
 [tool.django-stubs]
-django_settings_module = "gnezdo_backend.settings"
+django_settings_module = "energy.core.settings"
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

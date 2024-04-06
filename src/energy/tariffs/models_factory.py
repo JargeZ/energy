@@ -1,5 +1,6 @@
-from energy.tariffs.models import TariffCondition, Tariff, TariffGroup
 from factory.django import DjangoModelFactory
+
+from energy.tariffs.models import Tariff, TariffCondition, TariffGroup
 
 
 class TariffConditionFactory(DjangoModelFactory):

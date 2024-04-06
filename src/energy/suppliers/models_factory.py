@@ -1,6 +1,7 @@
-from energy.suppliers.models import EnergySupplier
 from factory import fuzzy
 from factory.django import DjangoModelFactory
+
+from energy.suppliers.models import EnergySupplier
 
 
 class EnergySupplierFactory(DjangoModelFactory):

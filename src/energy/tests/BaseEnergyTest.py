@@ -1,6 +1,7 @@
 import pytest
 import rest_framework.test
 from django.contrib.auth.models import User
+
 from energy.customers.models_factory import CustomerFactory
 from energy.customers.tests.utils.create_blue_customer import create_blue_customer
 from energy.suppliers.tests.utils.create_blue_supplier import create_blue_supplier
@@ -25,12 +26,11 @@ class BaseEnergyTest:
     def blue_customer(self, db):
         return create_blue_customer()
 
-
     @pytest.fixture()
     def admin_client(
-            self,
-            db: None,
-            user_admin,
+        self,
+        db: None,
+        user_admin,
     ) -> rest_framework.test.APIClient:
         """A Django test client logged in as an admin user."""
         from rest_framework.test import APIClient
