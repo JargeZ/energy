@@ -15,6 +15,22 @@ from energy.tariffs.services.ConsumptionCalculator import schema as s
 logger = logging.getLogger(__name__)
 
 
+# i realize that it would be better to change approach
+# if we make every tariff like Accumulator for counted charges
+#  so we can "feed" all quantiles to all tariffs and implement
+#  comprehensive activation logic for each tariff
+
+# also may be better to split all complete consumption
+# records on fixed size quantiles (better vary)
+# and "feed" them to tariffs accumulators
+
+# many tariffs can be activated but only first by priority will be used
+
+# TariffCondition goes turn into ActivationRule where we can configure
+# every parameter with operators
+# EQ, NE, GT, LT, GTE, LTE, IN, NOT_IN, RANGE, NOT_RANGE ...
+
+
 class CalculatorService:
     def __init__(
         self,
