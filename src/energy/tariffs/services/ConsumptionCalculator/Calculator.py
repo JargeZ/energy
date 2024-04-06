@@ -95,9 +95,12 @@ class CalculatorService:
 
     def _by_tariff_quantile_consumption(self, quantile: s.Quantile) -> dict[Tariff, Decimal]:
         matching_tariffs = self._get_matching_tariffs(quantile)
-        if len(matching_tariffs) == 1:
-            t = matching_tariffs[0]
-            return {t: quantile.value}
+        groups = [t.group_id for t in matching_tariffs]
+        if len(groups) != len(set(groups)):
+            # TODO: implement multiple matching tariffs
+            raise NotImplementedError('Multiple tariffs from the same group found')
 
-        # TODO: implement multiple matching tariffs
-        raise NotImplementedError()
+        if len(matching_tariffs) == 0:
+            raise ValueError('No matching tariffs found')
+
+        return {t: quantile.value for t in matching_tariffs}

@@ -10,3 +10,8 @@ class TariffConditionFactory(DjangoModelFactory):
 class TariffFactory(DjangoModelFactory):
     class Meta:
         model = Tariff
+
+
+class TariffGroupFactory(DjangoModelFactory):
+    class Meta:
+        model = TariffGroup

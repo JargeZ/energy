@@ -104,6 +104,17 @@ class TariffCondition(models.Model):
             return not all(matches) if self.inverted else all(matches)
 
 
+# Namespace for tariffs in which they should be uniq.
+# e.g. if we have tariffs for energy and for network, they should be in different groups
+# and so consumption calculator will apply consumption to all tariffs across different groups
+# but only one tariff from the same group should be matched
+class TariffGroup(models.Model):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'tariff_group'
+
+
 class Tariff(models.Model):
     supplier = models.ForeignKey('suppliers.EnergySupplier', on_delete=models.CASCADE, related_name='tariffs')
     name = models.CharField(max_length=255)
@@ -112,7 +123,10 @@ class Tariff(models.Model):
     unit_type = models.CharField(max_length=255, choices=UnitType.choices)
     effective_after_consumption = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     priority = models.IntegerField(default=0)
-    # stackable = models.BooleanField(default=False)
+    group = models.ForeignKey(TariffGroup, on_delete=models.CASCADE, null=False, blank=False)
+    group_id: int
+    
+    consumption_coefficient = models.DecimalField(max_digits=10, decimal_places=5, default=1)
 
     # NOTE: Possible many (but need to clarify AND/OR logic)
     condition: TariffCondition | None = models.ForeignKey(TariffCondition, on_delete=models.CASCADE, null=True,
