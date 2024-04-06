@@ -7,5 +7,8 @@ class Customer(models.Model):
     phone = models.CharField(max_length=20)
     address = models.TextField()
 
+    class Meta:
+        db_table = 'customer'
+
     def __str__(self):
         return f"{self.business_name} {self.address}"

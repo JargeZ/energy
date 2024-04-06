@@ -700,6 +700,21 @@ doc = ["sphinx"]
 test = ["pytest", "pytest-cov"]
 
 [[package]]
+name = "types-factory-boy"
+version = "0.4.1"
+description = "Typing stubs for factory-boy"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "types_factory_boy-0.4.1-py3-none-any.whl", hash = "sha256:a1fa265fad8b24ddf2d4363227d675d0c4cd44951b71d68ea8fc58aa90b0f85d"},
+    {file = "types_factory_boy-0.4.1.tar.gz", hash = "sha256:275b9e17a6ad79992bec77b956bb707770f7b0256e4172265e2139e48faf6faf"},
+]
+
+[package.dependencies]
+factory-boy = ">=3.2.0"
+typing-extensions = ">=4.2.0,<5.0.0"
+
+[[package]]
 name = "types-pytz"
 version = "2024.1.0.20240203"
 description = "Typing stubs for pytz"
@@ -746,4 +761,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "133ebda89d726e34dab4a470ef62b53ba58b44295b5532e2e54d8816b7835be5"
+content-hash = "7b12051810aabf52049d17a196a6ba6ec1a7aac245341abd24e70d8f29d2bdc1"
