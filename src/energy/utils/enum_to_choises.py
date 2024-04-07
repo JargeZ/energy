@@ -12,4 +12,4 @@ class EnumChoiceMixin(Enum):
         if isinstance(other, str):
             return self.value == other
 
-        return self.value == other.value
+        return self.value == other.consumption_value

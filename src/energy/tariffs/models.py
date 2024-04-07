@@ -72,20 +72,16 @@ class TariffCondition(models.Model):
             ),
         ]
 
-    def is_match(self, from_date: datetime, to_date: datetime) -> bool:
+    def is_match(self, date: datetime) -> bool:
         matches: list[bool] = []
         if self.weekday_from and self.weekday_to:
-            matches.append(self.weekday_from <= from_date.isoweekday() <= self.weekday_to)
+            matches.append(self.weekday_from <= date.isoweekday() <= self.weekday_to)
 
         if self.date_from and self.date_to:
-            from_match = self.date_from <= from_date.date() <= self.date_to
-            to_match = self.date_from <= to_date.date() <= self.date_to
-            matches.append(from_match or to_match)
+            matches.append(self.date_from <= date.date() <= self.date_to)
 
         if self.time_from and self.time_to:
-            from_match = self.time_from <= from_date.time() <= self.time_to
-            to_match = self.time_from <= to_date.time() <= self.time_to
-            matches.append(from_match or to_match)
+            matches.append(self.time_from <= date.time() <= self.time_to)
 
         if self.type != TariffCondition.Type.MIXED:
             assert len(matches) == 1
@@ -124,6 +120,9 @@ class Tariff(models.Model):
 
     class Meta:
         db_table = "tariff"
+        unique_together = [
+            ("priority", "group"),
+        ]
         constraints = [
             CheckConstraint(
                 name="effective_after_consumption_positive",

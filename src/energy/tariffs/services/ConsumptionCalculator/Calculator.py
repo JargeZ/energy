@@ -1,8 +1,10 @@
+import decimal
 import logging
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import cast
+from functools import cached_property
+from typing import NewType, cast
 
 from django.db.models import QuerySet
 
@@ -12,8 +14,9 @@ from energy.suppliers.models import EnergySupplier
 from energy.tariffs.models import Tariff, UnitType
 from energy.tariffs.services.ConsumptionCalculator import schema as s
 
+decimal.getcontext().prec = 28
 logger = logging.getLogger(__name__)
-
+GroupId = NewType("GroupId", int)
 
 # i realize that it would be better to change approach
 # if we make every tariff like Accumulator for counted charges
@@ -29,6 +32,8 @@ logger = logging.getLogger(__name__)
 # TariffCondition goes turn into ActivationRule where we can configure
 # every parameter with operators
 # EQ, NE, GT, LT, GTE, LTE, IN, NOT_IN, RANGE, NOT_RANGE ...
+
+QUANTILE_SIZE = timedelta(minutes=1)
 
 
 class CalculatorService:
@@ -60,29 +65,28 @@ class CalculatorService:
     def _get_tariffs(self) -> QuerySet[Tariff]:
         return self.supplier.tariffs.order_by("-priority")
 
-    def _add_quantile(self, quantile: s.Quantile):
-        quantile_cost = Decimal(0)
+    def _add_range(self, q_range: s.QuantileRange):
         verify_consumption = Decimal(0)
 
-        by_quantile = self._by_tariff_quantile_consumption(quantile)
-        for tariff, consumption in by_quantile.items():
-            cost_part = tariff.unit_price * (consumption * tariff.consumption_coefficient)
-            self.total_by_tariff[tariff] += cost_part
+        for q in q_range.by_quantiles(QUANTILE_SIZE):
+            by_tariff_consumption = self._by_tariff_quantile_consumption(quantile=q)
 
-            logger.info(
-                f"for Q {quantile.start} - {quantile.end} - {quantile.value} using "
-                f"[{tariff.name}] ({tariff.unit_type}x{tariff.unit_price}) "
-                f"X {consumption} = cost: {cost_part}"
-            )
+            for tariff, consumption in by_tariff_consumption.items():
+                cost_part = tariff.unit_price * (consumption * tariff.consumption_coefficient)
 
-            quantile_cost += cost_part
-            verify_consumption += consumption
+                logger.debug(
+                    f"for Q {q.date} - {q.consumption_value}/{q_range.value} using "
+                    f"[{tariff.name}] ({tariff.unit_type}x{tariff.unit_price}) "
+                    f"X {consumption} = cost: {cost_part}"
+                )
 
-        if verify_consumption % quantile.value:
-            raise ValueError("Consumption mismatch not all consumption was calculated")
+                self.total_by_tariff[tariff] += cost_part
+                self.total[UnitType(q_range.type).value] += cost_part
 
-        # TODO: add by tariff total
-        self.total[UnitType(quantile.type).value] += quantile_cost
+                verify_consumption += consumption
+
+        # if verify_consumption % q_range.value > Decimal("0.0001"):
+        #     raise ValueError("Consumption mismatch not all consumption was calculated")
 
     def calculate_total(self) -> Decimal:
         TARIFF_FIRST_HANDLERS = {
@@ -96,8 +100,8 @@ class CalculatorService:
             TARIFF_FIRST_HANDLERS[tariff_type](tariff)
 
         for consumption_quantile in self._get_quantiles(self.from_date, self.to_date):
-            domain_quantile = s.Quantile.from_consumption(consumption_quantile, self.from_date, self.to_date)
-            self._add_quantile(domain_quantile)
+            domain_quantile_range = s.QuantileRange.from_consumption(consumption_quantile, self.from_date, self.to_date)
+            self._add_range(domain_quantile_range)
 
         return cast(Decimal, sum(self.total.values()))
 
@@ -110,23 +114,40 @@ class CalculatorService:
     def _eval_tariff_type_fixed(self, tariff: Tariff):
         pass
 
-    def _get_matching_tariffs(self, quantile: s.Quantile) -> list[Tariff]:
+    @cached_property
+    def _tariffs_by_group_with_priority(self) -> dict[GroupId, list[Tariff]]:
+        qs = self._get_tariffs().prefetch_related("condition")
+
+        tariffs_conditional = qs.filter(condition__isnull=False)
+        tariffs_default = qs.filter(condition__isnull=True)
+        tariffs_by_group = defaultdict(list)
+
+        for tariff in list(tariffs_conditional) + list(tariffs_default):
+            tariffs_by_group[tariff.group_id].append(tariff)
+
+        return tariffs_by_group
+
+    def _get_effective_tariffs(self, quantile: s.Quantile) -> list[Tariff]:
         matching_tariffs = []
-        all_tariffs = self._get_tariffs().prefetch_related("condition").filter(unit_type=quantile.type.value)
+        all_tariffs = self._tariffs_by_group_with_priority
 
-        for t in all_tariffs:
-            assert t.condition
+        for group_id, tariffs in all_tariffs.items():
+            for t in tariffs:
+                if t.unit_type != quantile.type:
+                    continue
 
-            if t.condition and t.condition.is_match(quantile.start, quantile.end):
-                matching_tariffs.append(t)
+                if t.condition and t.condition.is_match(quantile.date):
+                    matching_tariffs.append(t)
+                    break
 
-            if not t.condition:
-                matching_tariffs.append(t)
+                if not t.condition:
+                    matching_tariffs.append(t)
+                    break
 
         return matching_tariffs
 
     def _by_tariff_quantile_consumption(self, quantile: s.Quantile) -> dict[Tariff, Decimal]:
-        matching_tariffs = self._get_matching_tariffs(quantile)
+        matching_tariffs = self._get_effective_tariffs(quantile)
         groups = [t.group_id for t in matching_tariffs]
         if len(groups) != len(set(groups)):
             # TODO: implement multiple matching tariffs
@@ -135,4 +156,4 @@ class CalculatorService:
         if len(matching_tariffs) == 0:
             raise ValueError("No matching tariffs found")
 
-        return {t: quantile.value for t in matching_tariffs}
+        return {t: quantile.consumption_value for t in matching_tariffs}

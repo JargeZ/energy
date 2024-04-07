@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Generator
 
 from pydantic import BaseModel, ConfigDict
 
@@ -8,6 +9,18 @@ from energy.tariffs.models import EnergyType
 
 
 class Quantile(BaseModel):
+    consumption_value: Decimal
+    type: EnergyType
+
+    date: datetime
+    length: timedelta
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+    )
+
+
+class QuantileRange(BaseModel):
     value: Decimal
     type: EnergyType
 
@@ -42,3 +55,22 @@ class Quantile(BaseModel):
             start=start,
             end=end,
         )
+
+    def by_quantiles(self, quantile_size: timedelta) -> Generator[Quantile, None, None]:
+        current_slice = self.start
+        diff = self.end - self.start
+        if diff % quantile_size:
+            # partial is not suported yet
+            raise ValueError(f"Quantile {self} size should be a divided of the {quantile_size}")
+
+        count = diff // quantile_size
+        each_consumption_value = self.value / count
+
+        while current_slice < self.end:
+            yield Quantile(
+                consumption_value=each_consumption_value,
+                type=self.type,
+                date=current_slice,
+                length=quantile_size,
+            )
+            current_slice += quantile_size

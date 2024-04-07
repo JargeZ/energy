@@ -69,7 +69,7 @@ def create_blue_customer() -> Customer:
     EnergyQuantileFactory(
         customer=customer,
         start=datetime(2024, 1, 1, 0, 0, 0, tzinfo=ZoneInfo("Australia/Sydney")),
-        end=datetime(2024, 1, 31, 23, 59, 59, tzinfo=ZoneInfo("Australia/Sydney")),
+        end=datetime(2024, 2, 1, 0, 0, 0, tzinfo=ZoneInfo("Australia/Sydney")),
         type=EnergyType.KW.value,
         value=34.1600,
     )
