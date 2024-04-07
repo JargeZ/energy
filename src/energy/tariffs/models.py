@@ -64,6 +64,9 @@ class ActivationRule(models.Model):
     # TODO: can be normalized, extract list values in separate shareable model and so on
     value: ConditionValue = SchemaField(null=True, blank=True)  # type: ignore[assignment]
 
+    def __str__(self):
+        return f"{self.name} - {self.parameter} {self.operator} {self.value.root}"[:100]
+
 
 # Namespace for tariffs in which they should be uniq.
 # e.g. if we have tariffs for energy and for network, they should be in different groups
@@ -74,6 +77,9 @@ class TariffGroup(models.Model):
 
     class Meta:
         db_table = "tariff_group"
+
+    def __str__(self):
+        return self.name
 
 
 class Tariff(models.Model):

@@ -1,6 +1,13 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from django.db import models
 
-from energy.consumption.models import EnergyQuantile
+from energy.consumption.models import EnergyConsumptionRecord
+
+
+DEMO_FROM_DATE = datetime(2024, 1, 1, tzinfo=ZoneInfo("Australia/Sydney"))
+DEMO_TO_DATE = datetime(2024, 2, 1, tzinfo=ZoneInfo("Australia/Sydney"))
 
 
 class Customer(models.Model):
@@ -9,7 +16,10 @@ class Customer(models.Model):
     phone = models.CharField(max_length=20)
     address = models.TextField()
 
-    energy_quantiles: models.QuerySet[EnergyQuantile]
+    demo_bill_from = models.DateTimeField(null=True, blank=True, default=DEMO_FROM_DATE)
+    demo_bill_to = models.DateTimeField(null=True, blank=True, default=DEMO_TO_DATE)
+
+    energy_quantiles: models.QuerySet[EnergyConsumptionRecord]
 
     class Meta:
         db_table = "customer"

@@ -10,10 +10,10 @@ faker = Faker()
 
 
 class UserFactory(DjangoModelFactory):
-    phone: str = factory.LazyAttribute(lambda obj: faker.phone_number())
     email: str = factory.LazyAttribute(lambda obj: faker.email())
     first_name: str = factory.LazyAttribute(lambda obj: faker.first_name())
     last_name: str = factory.LazyAttribute(lambda obj: faker.last_name())
+    is_active: bool = True
 
     class Meta:
         model = get_user_model()

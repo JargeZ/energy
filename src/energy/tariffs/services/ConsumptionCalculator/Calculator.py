@@ -8,7 +8,7 @@ from typing import NewType, cast
 
 from django.db.models import QuerySet
 
-from energy.consumption.models import EnergyQuantile
+from energy.consumption.models import EnergyConsumptionRecord
 from energy.customers.models import Customer
 from energy.suppliers.models import EnergySupplier
 from energy.tariffs.models import Tariff, UnitType
@@ -58,7 +58,7 @@ class CalculatorService:
         self.total_by_tariff_consumption: dict[Tariff, Decimal] = defaultdict(Decimal)
         self.total_by_tariff_group: dict[GroupId, Decimal] = defaultdict(Decimal)
 
-    def _get_quantiles(self, from_date: datetime, to_date: datetime) -> QuerySet[EnergyQuantile]:
+    def _get_quantiles(self, from_date: datetime, to_date: datetime) -> QuerySet[EnergyConsumptionRecord]:
         # It covers overlapping periods
         # when quantile starts before <from_date> but ends after <from_date>
         # further, we have to normalize it to overlaps period proportionally

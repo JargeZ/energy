@@ -4,7 +4,7 @@ from typing import Generator
 
 from pydantic import BaseModel, ConfigDict
 
-from energy.consumption.models import EnergyQuantile
+from energy.consumption.models import EnergyConsumptionRecord
 from energy.tariffs.models import EnergyType
 
 
@@ -32,7 +32,7 @@ class QuantileRange(BaseModel):
     )
 
     @classmethod
-    def from_consumption(cls, consumption: EnergyQuantile, from_date: datetime, to_date: datetime):
+    def from_consumption(cls, consumption: EnergyConsumptionRecord, from_date: datetime, to_date: datetime):
         value = consumption.value
         start = consumption.start.astimezone(from_date.tzinfo)
         end = consumption.end.astimezone(from_date.tzinfo)

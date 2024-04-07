@@ -7,7 +7,7 @@ import factory
 from factory import fuzzy
 from factory.django import DjangoModelFactory
 
-from energy.consumption.models import EnergyQuantile
+from energy.consumption.models import EnergyConsumptionRecord
 from energy.tariffs.models import EnergyType
 
 
@@ -19,4 +19,4 @@ class EnergyQuantileFactory(DjangoModelFactory):
     value: Decimal = fuzzy.FuzzyDecimal(0.0, 100.0)
 
     class Meta:
-        model = EnergyQuantile
+        model = EnergyConsumptionRecord
