@@ -20,4 +20,4 @@ class ConsumedValueRule(BaseConditionRuleHandler):
 
     def check_between(self, quantile: Quantile, calculator: "CalculatorService") -> bool:
         consumed = calculator.total_by_tariff[self.tariff]
-        return self.condition_value[0] <= consumed <= self.condition_value[1]
+        return self.condition_value.root[0] <= consumed <= self.condition_value.root[1]

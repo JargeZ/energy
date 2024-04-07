@@ -20,4 +20,4 @@ class WeekdayRule(BaseConditionRuleHandler):
 
     def check_between(self, quantile: Quantile, calculator: "CalculatorService") -> bool:
         weekday = quantile.date.isoweekday()
-        return self.condition_value[0] <= weekday <= self.condition_value[1]
+        return self.condition_value.root[0] <= weekday <= self.condition_value.root[1]

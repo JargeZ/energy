@@ -20,4 +20,4 @@ class DateRule(BaseConditionRuleHandler):
 
     def check_between(self, quantile: Quantile, calculator: "CalculatorService") -> bool:
         date_part = quantile.date.date()
-        return self.condition_value[0] <= date_part <= self.condition_value[1]
+        return self.condition_value.root[0] <= date_part <= self.condition_value.root[1]
