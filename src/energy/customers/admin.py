@@ -28,8 +28,8 @@ class CustomerAdmin(admin.ModelAdmin):
             calculator = CalculatorService(
                 supplier=supplier,
                 customer=obj,
-                from_date=obj.demo_bill_from or DEMO_FROM_DATE,
-                to_date=obj.demo_bill_to or DEMO_TO_DATE,
+                from_date=obj.demo_bill_from.astimezone(obj.time_zone) or DEMO_FROM_DATE,
+                to_date=obj.demo_bill_to.astimezone(obj.time_zone) or DEMO_TO_DATE,
             )
             try:
                 calculator.calculate_total()

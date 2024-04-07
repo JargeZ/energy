@@ -40,13 +40,13 @@ class QuantileRange(BaseModel):
         if consumption.start < from_date:
             diff = consumption.start - from_date
             proportion = diff / (consumption.end - consumption.start)
-            value = consumption.value * proportion
+            value = consumption.value * Decimal(proportion)
             start = from_date
 
         if consumption.end > to_date:
             diff = to_date - consumption.end
             proportion = diff / (consumption.end - consumption.start)
-            value = consumption.value * proportion
+            value = consumption.value * Decimal(proportion)
             end = to_date
 
         return cls(

@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 from django.db import models
 
 from energy.consumption.models import EnergyConsumptionRecord
-
+from timezone_field import TimeZoneField
 
 DEMO_FROM_DATE = datetime(2024, 1, 1, tzinfo=ZoneInfo("Australia/Sydney"))
 DEMO_TO_DATE = datetime(2024, 2, 1, tzinfo=ZoneInfo("Australia/Sydney"))
@@ -18,6 +18,7 @@ class Customer(models.Model):
 
     demo_bill_from = models.DateTimeField(null=True, blank=True, default=DEMO_FROM_DATE)
     demo_bill_to = models.DateTimeField(null=True, blank=True, default=DEMO_TO_DATE)
+    time_zone = TimeZoneField(verbose_name="Timezone", default="Australia/Sydney")
 
     energy_quantiles: models.QuerySet[EnergyConsumptionRecord]
 

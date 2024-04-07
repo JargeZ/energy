@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class EnvSettings(BaseSettings):
-    DJANGO_ENV: str
+    DJANGO_ENV: str = "production"
 
     class Config:
         env_file = ".env"

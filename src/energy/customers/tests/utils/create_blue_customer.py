@@ -12,7 +12,11 @@ def create_blue_customer() -> Customer:
     # reverse analysis of the Blue customer bill sheet
     # TODO: automate as bill-parsers and flatten equally for whole period
 
-    customer = CustomerFactory(business_name="Blue customer")
+    customer = CustomerFactory(
+        business_name="Blue customer",
+        demo_bill_from=datetime(2024, 1, 1, tzinfo=ZoneInfo("Australia/Sydney")),
+        demo_bill_to=datetime(2024, 2, 1, tzinfo=ZoneInfo("Australia/Sydney")),
+    )
 
     PEAK_ENERGY_BUT_OFF_PEAK_NETWORK = Decimal("6_927.9400") - Decimal("6_372.3280")  # = 555.6120
     OFF_PEAK_BOOTH = min(Decimal("3_229.5760"), Decimal("3_785.1880"))  # = 3_229.5760

@@ -11,7 +11,11 @@ from energy.utils.power_converters import kVA_to_kW
 
 def create_green_customer() -> Customer:
     # reverse analysis of the Green customer bill sheet
-    customer = CustomerFactory(business_name="Green customer")
+    customer = CustomerFactory(
+        business_name="Green customer",
+        demo_bill_from=datetime(2024, 2, 28, tzinfo=ZoneInfo("Australia/Sydney")),
+        demo_bill_to=datetime(2024, 3, 25 + 1, tzinfo=ZoneInfo("Australia/Sydney")),
+    )
 
     # Whole month base energy
     EnergyQuantileFactory(
