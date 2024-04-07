@@ -121,13 +121,11 @@ class CalculatorService:
     # ONE-TIME cost-ish tariffs loading
     @cached_property
     def _tariffs_by_group_with_priority(self) -> dict[GroupId, list[TariffMatcherService]]:
-        qs = self._get_tariffs().prefetch_related("condition")
+        tariffs = self._get_tariffs().prefetch_related("activation_rules")
 
-        tariffs_conditional = qs.filter(condition__isnull=False)
-        tariffs_default = qs.filter(condition__isnull=True)
         tariffs_by_group = defaultdict(list)
 
-        for tariff in list(tariffs_conditional) + list(tariffs_default):
+        for tariff in tariffs:
             matcher = TariffMatcherService(tariff)
             tariffs_by_group[tariff.group_id].append(matcher)
 
