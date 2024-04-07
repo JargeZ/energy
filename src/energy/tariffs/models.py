@@ -19,14 +19,14 @@ WEEKDAY_RANGE_VALIDATORS = [MinValueValidator(1), MaxValueValidator(7)]
 class EnergyType(EnumChoiceMixin, Enum):
     KW = "KW"
     KWH = "kWh"
-    KWA = "kWA"
+    KVA = "kVA"
 
 
 # TODO: deduplicate but may be enough, should be not so often changing
 class UnitType(EnumChoiceMixin, Enum):
     KW = "KW"
     KWH = "kWh"
-    KWA = "kWA"
+    KVA = "kVA"
 
     DAYS = "days"
     FIXED = "fixed"

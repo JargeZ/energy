@@ -12,12 +12,12 @@ from energy.consumption.models import EnergyQuantile
 from energy.customers.models import Customer
 from energy.suppliers.models import EnergySupplier
 from energy.tariffs.models import Tariff, UnitType
+from energy.tariffs.schema.types import GroupId
 from energy.tariffs.services.ConsumptionCalculator import schema as s
 from energy.tariffs.services.TariffMatcher.TariffMatcher import TariffMatcherService
 
 decimal.getcontext().prec = 28
 logger = logging.getLogger(__name__)
-GroupId = NewType("GroupId", int)
 
 # i realize that it would be better to change approach
 # if we make every tariff like Accumulator for counted charges
@@ -34,11 +34,12 @@ GroupId = NewType("GroupId", int)
 # every parameter with operators
 # EQ, NE, GT, LT, GTE, LTE, IN, NOT_IN, RANGE, NOT_RANGE ...
 
+# possible dynamic for each customer/supplier
 QUANTILE_SIZE = timedelta(minutes=1)
 
 
 class CalculatorService:
-    total_by_tariff: dict[Tariff, Decimal]
+    total_by_tariff_cost: dict[Tariff, Decimal]
 
     def __init__(
         self,
@@ -53,7 +54,9 @@ class CalculatorService:
         self.from_date = from_date
         self.to_date = to_date
 
-        self.total_by_tariff: dict[Tariff, Decimal] = defaultdict(Decimal)
+        self.total_by_tariff_cost: dict[Tariff, Decimal] = defaultdict(Decimal)
+        self.total_by_tariff_consumption: dict[Tariff, Decimal] = defaultdict(Decimal)
+        self.total_by_tariff_group: dict[GroupId, Decimal] = defaultdict(Decimal)
 
     def _get_quantiles(self, from_date: datetime, to_date: datetime) -> QuerySet[EnergyQuantile]:
         # It covers overlapping periods
@@ -82,7 +85,10 @@ class CalculatorService:
                     f"X {consumption} = cost: {cost_part}"
                 )
 
-                self.total_by_tariff[tariff] += cost_part
+                # TODO: one structure for all totals
+                self.total_by_tariff_cost[tariff] += cost_part
+                self.total_by_tariff_consumption[tariff] += consumption
+                self.total_by_tariff_group[GroupId(tariff.group_id)] += cost_part
 
                 verify_consumption += consumption
 
@@ -108,15 +114,15 @@ class CalculatorService:
             domain_quantile_range = s.QuantileRange.from_consumption(consumption_quantile, self.from_date, self.to_date)
             self._add_range(domain_quantile_range)
 
-        return cast(Decimal, sum(self.total_by_tariff.values()))
+        return cast(Decimal, sum(self.total_by_tariff_cost.values()))
 
     def _eval_tariff_type_days(self, tariff: Tariff):
         days = (self.to_date - self.from_date).days
         cost = tariff.unit_price * days
-        self.total_by_tariff[tariff] += cost
+        self.total_by_tariff_cost[tariff] += cost
 
     def _eval_tariff_type_fixed(self, tariff: Tariff):
-        self.total_by_tariff[tariff] += tariff.unit_price
+        self.total_by_tariff_cost[tariff] += tariff.unit_price
 
     # ONE-TIME cost-ish tariffs loading
     @cached_property

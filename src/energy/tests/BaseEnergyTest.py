@@ -4,7 +4,9 @@ from django.contrib.auth.models import User
 
 from energy.customers.models_factory import CustomerFactory
 from energy.customers.tests.utils.create_blue_customer import create_blue_customer
+from energy.customers.tests.utils.create_green_customer import create_green_customer
 from energy.suppliers.tests.utils.create_blue_supplier import create_blue_supplier
+from energy.suppliers.tests.utils.create_green_supplier import create_green_supplier
 from energy.tests.factory.UserFactory import UserFactory
 
 
@@ -25,6 +27,14 @@ class BaseEnergyTest:
     @pytest.fixture()
     def blue_customer(self, db):
         return create_blue_customer()
+
+    @pytest.fixture()
+    def green_supplier(self, db):
+        return create_green_supplier()
+
+    @pytest.fixture()
+    def green_customer(self, db):
+        return create_green_customer()
 
     @pytest.fixture()
     def admin_client(
