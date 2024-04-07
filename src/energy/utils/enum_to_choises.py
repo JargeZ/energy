@@ -13,3 +13,6 @@ class EnumChoiceMixin(Enum):
             return self.value == other
 
         return self.value == other.consumption_value
+
+    def __hash__(self):
+        return hash(self.value)

@@ -292,6 +292,29 @@ files = [
 django = ">=2.2"
 
 [[package]]
+name = "django-pydantic-field"
+version = "0.3.7"
+description = "Django JSONField with Pydantic models as a Schema"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "django-pydantic-field-0.3.7.tar.gz", hash = "sha256:0c40b2017c237916320be3e7154e49dc1e9d3f251d7748a5081757cf860fb74e"},
+    {file = "django_pydantic_field-0.3.7-py3-none-any.whl", hash = "sha256:4c9f700dfcc3f868c3fb9b49572c6a2cd438c08be125a9030b8074583eab0323"},
+]
+
+[package.dependencies]
+django = ">=3.1,<6"
+pydantic = ">=1.10,<3"
+typing-extensions = "*"
+
+[package.extras]
+ci = ["mysqlclient (>=2.1)", "psycopg2-binary (>=2.7,<3)", "psycopg[binary] (>=3.1,<4)"]
+coreapi = ["coreapi"]
+dev = ["black", "build", "django-stubs[compatible-mypy] (>=4.2,<5.0)", "djangorestframework (>=3.11,<4)", "djangorestframework-stubs[compatible-mypy] (>=3.14,<4.0)", "isort", "mypy", "pre-commit", "pytest (>=7.4,<8.0)", "pytest-django (>=4.5,<5)"]
+openapi = ["inflection", "uritemplate"]
+test = ["dj-database-url (>=2.0,<3.0)", "django-pydantic-field[coreapi,openapi]", "djangorestframework (>=3,<4)", "pyyaml", "syrupy (>=3,<5)"]
+
+[[package]]
 name = "django-stubs"
 version = "4.2.7"
 description = "Mypy stubs for Django"
@@ -961,4 +984,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "c2dba865f7ffc23122280c463f4e13c2f0786ad80031584d692e6314c2dc6650"
+content-hash = "46b2ecd542402cc86f98b53d428e3d6b173bec5b38b8bc71e3a4ccdd3e4eb37e"
