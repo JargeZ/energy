@@ -13,6 +13,7 @@ from energy.customers.models import Customer
 from energy.suppliers.models import EnergySupplier
 from energy.tariffs.models import Tariff, UnitType
 from energy.tariffs.services.ConsumptionCalculator import schema as s
+from energy.tariffs.services.TariffMatcher.TariffMatcher import TariffMatcherService
 
 decimal.getcontext().prec = 28
 logger = logging.getLogger(__name__)
@@ -37,6 +38,8 @@ QUANTILE_SIZE = timedelta(minutes=1)
 
 
 class CalculatorService:
+    total_by_tariff: dict[Tariff, Decimal]
+
     def __init__(
         self,
         *,
@@ -50,7 +53,6 @@ class CalculatorService:
         self.from_date = from_date
         self.to_date = to_date
 
-        self.total: dict[UnitType, Decimal] = defaultdict(Decimal)
         self.total_by_tariff: dict[Tariff, Decimal] = defaultdict(Decimal)
 
     def _get_quantiles(self, from_date: datetime, to_date: datetime) -> QuerySet[EnergyQuantile]:
@@ -81,7 +83,6 @@ class CalculatorService:
                 )
 
                 self.total_by_tariff[tariff] += cost_part
-                self.total[UnitType(q_range.type).value] += cost_part
 
                 verify_consumption += consumption
 
@@ -89,33 +90,37 @@ class CalculatorService:
         #     raise ValueError("Consumption mismatch not all consumption was calculated")
 
     def calculate_total(self) -> Decimal:
-        TARIFF_FIRST_HANDLERS = {
+        non_consumption_based_tariffs = {
             UnitType.DAYS.value: self._eval_tariff_type_days,
             UnitType.FIXED.value: self._eval_tariff_type_fixed,
         }
 
-        tariff_first_tariffs: QuerySet[Tariff] = self._get_tariffs().filter(unit_type__in=TARIFF_FIRST_HANDLERS.keys())
-        for tariff in tariff_first_tariffs:
+        # Evaluate fixed, total-day-based and other tariffs
+        non_consumption_tariffs: QuerySet[Tariff] = self._get_tariffs().filter(
+            unit_type__in=non_consumption_based_tariffs.keys()
+        )
+        for tariff in non_consumption_tariffs:
             tariff_type = UnitType(tariff.unit_type).value
-            TARIFF_FIRST_HANDLERS[tariff_type](tariff)
+            non_consumption_based_tariffs[tariff_type](tariff)
 
+        # Feed consumption to consumption-based tariffs
         for consumption_quantile in self._get_quantiles(self.from_date, self.to_date):
             domain_quantile_range = s.QuantileRange.from_consumption(consumption_quantile, self.from_date, self.to_date)
             self._add_range(domain_quantile_range)
 
-        return cast(Decimal, sum(self.total.values()))
+        return cast(Decimal, sum(self.total_by_tariff.values()))
 
     def _eval_tariff_type_days(self, tariff: Tariff):
         days = (self.to_date - self.from_date).days
         cost = tariff.unit_price * days
-        self.total[UnitType.DAYS.value] += cost
         self.total_by_tariff[tariff] += cost
 
     def _eval_tariff_type_fixed(self, tariff: Tariff):
-        pass
+        self.total_by_tariff[tariff] += tariff.unit_price
 
+    # ONE-TIME cost-ish tariffs loading
     @cached_property
-    def _tariffs_by_group_with_priority(self) -> dict[GroupId, list[Tariff]]:
+    def _tariffs_by_group_with_priority(self) -> dict[GroupId, list[TariffMatcherService]]:
         qs = self._get_tariffs().prefetch_related("condition")
 
         tariffs_conditional = qs.filter(condition__isnull=False)
@@ -123,7 +128,8 @@ class CalculatorService:
         tariffs_by_group = defaultdict(list)
 
         for tariff in list(tariffs_conditional) + list(tariffs_default):
-            tariffs_by_group[tariff.group_id].append(tariff)
+            matcher = TariffMatcherService(tariff)
+            tariffs_by_group[tariff.group_id].append(matcher)
 
         return tariffs_by_group
 
@@ -131,27 +137,22 @@ class CalculatorService:
         matching_tariffs = []
         all_tariffs = self._tariffs_by_group_with_priority
 
-        for group_id, tariffs in all_tariffs.items():
-            for t in tariffs:
-                if t.unit_type != quantile.type:
-                    continue
-
-                if t.condition and t.condition.is_match(quantile.date):
-                    matching_tariffs.append(t)
-                    break
-
-                if not t.condition:
-                    matching_tariffs.append(t)
+        for group_id, tariff_matchers in all_tariffs.items():
+            for matcher in tariff_matchers:
+                if matcher.is_match(quantile, self):
+                    matching_tariffs.append(matcher.tariff)
                     break
 
         return matching_tariffs
 
     def _by_tariff_quantile_consumption(self, quantile: s.Quantile) -> dict[Tariff, Decimal]:
         matching_tariffs = self._get_effective_tariffs(quantile)
+
+        # check if we have only one tariff from the same group
+        # this code may be redundant but now just in case
         groups = [t.group_id for t in matching_tariffs]
         if len(groups) != len(set(groups)):
-            # TODO: implement multiple matching tariffs
-            raise NotImplementedError("Multiple tariffs from the same group found")
+            raise ValueError("Only one tariff from the same group should be matched. This code should be unrachable.")
 
         if len(matching_tariffs) == 0:
             raise ValueError("No matching tariffs found")
