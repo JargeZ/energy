@@ -42,7 +42,7 @@ class BaseConditionRuleHandler(abc.ABC):
         return not self.check_between(quantile, calculator)
 
     def is_match(self, quantile: s.Quantile, calculator: "CalculatorService") -> bool:
-        postfix = self.rule.operator.value
+        postfix = self.rule.operator
         method_name = f"check_{postfix}"
         method = getattr(self, method_name)
-        return method(quantile)
+        return method(quantile, calculator)
