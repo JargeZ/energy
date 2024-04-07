@@ -13,6 +13,9 @@ from energy.utils.enum_to_choises import EnumChoiceMixin
 WEEKDAY_RANGE_VALIDATORS = [MinValueValidator(1), MaxValueValidator(7)]
 
 
+# TODO: cleanup file
+
+
 class EnergyType(EnumChoiceMixin, Enum):
     KW = "KW"
     KWH = "kWh"
@@ -81,7 +84,7 @@ class Tariff(models.Model):
     unit_type = models.CharField(max_length=255, choices=UnitType.choices)
     priority = models.IntegerField(default=0)
     group = models.ForeignKey(TariffGroup, on_delete=models.CASCADE, null=False, blank=False)
-    group_id: int
+    group_id: int  # never mind, just fast way for IDE
 
     # not sure about it, just for deal with Loss factor at the moment
     consumption_coefficient = models.DecimalField(max_digits=10, decimal_places=5, default=1)
