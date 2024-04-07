@@ -9,15 +9,15 @@ if TYPE_CHECKING:
     )
 
 
-class DateRule(BaseConditionRuleHandler):
+class ConsumedValueRule(BaseConditionRuleHandler):
     def check_eq(self, quantile: Quantile, calculator: "CalculatorService") -> bool:
-        date_part = quantile.date.date()
-        return self.condition_value == date_part
+        consumed = calculator.total_by_tariff[self.tariff]
+        return self.condition_value == consumed
 
     def check_in(self, quantile: Quantile, calculator: "CalculatorService") -> bool:
-        date_part = quantile.date.date()
-        return date_part in self.condition_value
+        consumed = calculator.total_by_tariff[self.tariff]
+        return consumed in self.condition_value
 
     def check_between(self, quantile: Quantile, calculator: "CalculatorService") -> bool:
-        date_part = quantile.date.date()
-        return self.condition_value[0] <= date_part <= self.condition_value[1]
+        consumed = calculator.total_by_tariff[self.tariff]
+        return self.condition_value[0] <= consumed <= self.condition_value[1]

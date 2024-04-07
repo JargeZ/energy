@@ -9,15 +9,15 @@ if TYPE_CHECKING:
     )
 
 
-class DateRule(BaseConditionRuleHandler):
+class WeekdayRule(BaseConditionRuleHandler):
     def check_eq(self, quantile: Quantile, calculator: "CalculatorService") -> bool:
-        date_part = quantile.date.date()
-        return self.condition_value == date_part
+        weekday = quantile.date.isoweekday()
+        return self.condition_value == weekday
 
     def check_in(self, quantile: Quantile, calculator: "CalculatorService") -> bool:
-        date_part = quantile.date.date()
-        return date_part in self.condition_value
+        weekday = quantile.date.isoweekday()
+        return weekday in self.condition_value
 
     def check_between(self, quantile: Quantile, calculator: "CalculatorService") -> bool:
-        date_part = quantile.date.date()
-        return self.condition_value[0] <= date_part <= self.condition_value[1]
+        weekday = quantile.date.isoweekday()
+        return self.condition_value[0] <= weekday <= self.condition_value[1]

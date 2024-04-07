@@ -1,8 +1,14 @@
 import abc
 from abc import abstractmethod
-from energy.tariffs.services.ConsumptionCalculator import schema as s, Calculator
+from typing import TYPE_CHECKING
 
 from energy.tariffs.models import ActivationRule, ConditionValue, Tariff
+from energy.tariffs.services.ConsumptionCalculator import schema as s
+
+if TYPE_CHECKING:
+    from energy.tariffs.services.ConsumptionCalculator.Calculator import (
+        CalculatorService,
+    )
 
 
 class BaseConditionRuleHandler(abc.ABC):
@@ -18,24 +24,24 @@ class BaseConditionRuleHandler(abc.ABC):
     # NOT_BETWEEN = "not_between"
 
     @abstractmethod
-    def check_eq(self, quantile: s.Quantile, calculator: Calculator) -> bool:
+    def check_eq(self, quantile: s.Quantile, calculator: "CalculatorService") -> bool:
         raise NotImplementedError()
 
     @abstractmethod
-    def check_in(self, quantile: s.Quantile, calculator: Calculator) -> bool:
+    def check_in(self, quantile: s.Quantile, calculator: "CalculatorService") -> bool:
         raise NotImplementedError()
 
-    def check_not_in(self, quantile: s.Quantile, calculator: Calculator) -> bool:
+    def check_not_in(self, quantile: s.Quantile, calculator: "CalculatorService") -> bool:
         return not self.check_in(quantile, calculator)
 
     @abstractmethod
-    def check_between(self, quantile: s.Quantile, calculator: Calculator) -> bool:
+    def check_between(self, quantile: s.Quantile, calculator: "CalculatorService") -> bool:
         raise NotImplementedError()
 
-    def check_not_between(self, quantile: s.Quantile, calculator: Calculator) -> bool:
+    def check_not_between(self, quantile: s.Quantile, calculator: "CalculatorService") -> bool:
         return not self.check_between(quantile, calculator)
 
-    def is_match(self, quantile: s.Quantile, calculator: Calculator) -> bool:
+    def is_match(self, quantile: s.Quantile, calculator: "CalculatorService") -> bool:
         postfix = self.rule.operator.value
         method_name = f"check_{postfix}"
         method = getattr(self, method_name)
